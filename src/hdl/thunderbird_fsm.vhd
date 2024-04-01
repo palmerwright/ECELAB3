@@ -36,18 +36,18 @@
 --|					can be changed by the inputs
 --|					
 --|
---|                 xxx State Encoding key
+--|                 One Hot State Encoding key
 --|                 --------------------
 --|                  State | Encoding
 --|                 --------------------
---|                  OFF   | 
---|                  ON    | 
---|                  R1    | 
---|                  R2    | 
---|                  R3    | 
---|                  L1    | 
---|                  L2    | 
---|                  L3    | 
+--|                  OFF   | 10000000
+--|                  ON    | 01000000
+--|                  R1    | 00100000
+--|                  R2    | 00010000
+--|                  R3    | 00001000
+--|                  L1    | 00000100
+--|                  L2    | 00000010
+--|                  L3    | 00000001
 --|                 --------------------
 --|
 --|
@@ -87,22 +87,55 @@ library ieee;
  
 entity thunderbird_fsm is 
   port(
-	
+      i_clk, i_reset  : in    std_logic;
+      i_left, i_right : in    std_logic;
+      o_lights_L      : out   std_logic_vector(2 downto 0);
+      o_lights_R      : out   std_logic_vector(2 downto 0)
   );
 end thunderbird_fsm;
 
 architecture thunderbird_fsm_arch of thunderbird_fsm is 
 
 -- CONSTANTS ------------------------------------------------------------------
+
+    signal current_state, next_state: std_logic_vector(7 downto 0);
   
 begin
 
-	-- CONCURRENT STATEMENTS --------------------------------------------------------	
-	
-    ---------------------------------------------------------------------------------
-	
-	-- PROCESSES --------------------------------------------------------------------
-    
-	-----------------------------------------------------					   
-				  
+    process(i_clk)
+begin
+  if rising_edge(i_clk) then
+    if i_reset = '1' then
+      current_state <= "10000000";
+    else
+      current_state <= next_state;
+    end if;
+  end if;
+end process;
+
+process(current_state, i_left, i_right)
+begin
+  
+  next_state <= current_state; 
+ 
+  if current_state = "10000000" then
+    if i_left = '1' then
+      next_state <= "00000100";
+    elsif i_right = '1' then
+      next_state <= "00100000";
+    end if;
+
+  end if;
+end process;
+
+o_lights_L <= "100" when current_state = "00000100" else
+              "110" when current_state = "00000010" else
+              "111" when current_state = "00000001" else
+              "000";
+              
+o_lights_R <= "100" when current_state = "00100000" else
+              "110" when current_state = "00010000" else
+              "111" when current_state = "00001000" else
+              "000";
+	  
 end thunderbird_fsm_arch;
