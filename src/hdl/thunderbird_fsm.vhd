@@ -82,60 +82,67 @@
 --|
 --+----------------------------------------------------------------------------
 library ieee;
-  use ieee.std_logic_1164.all;
-  use ieee.numeric_std.all;
- 
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
 entity thunderbird_fsm is 
-  port(
-      i_clk, i_reset  : in    std_logic;
-      i_left, i_right : in    std_logic;
-      o_lights_L      : out   std_logic_vector(2 downto 0);
-      o_lights_R      : out   std_logic_vector(2 downto 0)
-  );
+    port(
+        i_clk, i_reset  : in    std_logic;
+        i_left, i_right : in    std_logic;
+        o_lights_L      : out   std_logic_vector(2 downto 0);
+        o_lights_R      : out   std_logic_vector(2 downto 0)
+    );
 end thunderbird_fsm;
 
 architecture thunderbird_fsm_arch of thunderbird_fsm is 
 
--- CONSTANTS ------------------------------------------------------------------
+    -- Constants
+    constant OFF_STATE : std_logic_vector(7 downto 0) := "10000000";
+    constant HAZARD_STATE : std_logic_vector(7 downto 0) := "00000001";
 
+    -- Signals
     signal current_state, next_state: std_logic_vector(7 downto 0);
   
 begin
 
     process(i_clk)
-begin
-  if rising_edge(i_clk) then
-    if i_reset = '1' then
-      current_state <= "10000000";
-    else
-      current_state <= next_state;
-    end if;
-  end if;
-end process;
+    begin
+        if rising_edge(i_clk) then
+            if i_reset = '1' then
+                current_state <= OFF_STATE;
+            else
+                current_state <= next_state;
+            end if;
+        end if;
+    end process;
 
-process(current_state, i_left, i_right)
-begin
-  
-  next_state <= current_state; 
- 
-  if current_state = "10000000" then
-    if i_left = '1' then
-      next_state <= "00000100";
-    elsif i_right = '1' then
-      next_state <= "00100000";
-    end if;
+    process(current_state, i_left, i_right)
+    begin
+        next_state <= current_state; 
 
-  end if;
-end process;
+        case current_state is
+            when OFF_STATE =>
+                if i_left = '1' then
+                    next_state <= "00000100"; 
+                elsif i_right = '1' then
+                    next_state <= "00001000";
+                elsif i_left = '1' and i_right = '1' then
+                    next_state <= HAZARD_STATE;
+                end if;
+            when others =>
+                null;
+        end case;
+    end process;
 
-o_lights_L <= "100" when current_state = "00000100" else
-              "110" when current_state = "00000010" else
-              "111" when current_state = "00000001" else
-              "000";
+    -- Output Logic
+    o_lights_L <= "100" when current_state = "00000001" else
+                  "110" when current_state = "00000010" else
+                  "111" when current_state = "00000100" or current_state = HAZARD_STATE else
+                  "000";
               
-o_lights_R <= "100" when current_state = "00100000" else
-              "110" when current_state = "00010000" else
-              "111" when current_state = "00001000" else
-              "000";
+    o_lights_R <= "100" when current_state = "00001000" else
+                  "110" when current_state = "00010000" else
+                  "111" when current_state = "00100000" or current_state = HAZARD_STATE else
+                  "000";
 	  
 end thunderbird_fsm_arch;
