@@ -89,7 +89,6 @@ entity thunderbird_fsm is
     port(
         i_clk, i_reset  : in    std_logic;
         i_left, i_right : in    std_logic;
-        btnR, btnL      : in    std_logic;  
         o_lights_L      : out   std_logic_vector(2 downto 0);
         o_lights_R      : out   std_logic_vector(2 downto 0)
     );
