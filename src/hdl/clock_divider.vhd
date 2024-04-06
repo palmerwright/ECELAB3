@@ -47,8 +47,8 @@
 --|
 --+----------------------------------------------------------------------------
 library IEEE;
-use IEEE.STD_LOGIC_1164.ALL;
-use ieee.numeric_std.all;
+    use IEEE.STD_LOGIC_1164.ALL;
+    use ieee.numeric_std.all;
 
 entity clock_divider is
 	generic ( constant k_DIV : natural := 2	); -- How many clk cycles until slow clock toggles
