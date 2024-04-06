@@ -84,9 +84,9 @@ begin
                 o_lights_L(0) => w_thunderbird_L(0),
                 o_lights_L(1) => w_thunderbird_L(1),
                 o_lights_L(2) => w_thunderbird_L(2),
-                o_lights_R(2) => w_thunderbird_R(0),
+                o_lights_R(2) => w_thunderbird_R(2),
                 o_lights_R(1) => w_thunderbird_R(1),
-                o_lights_R(0) => w_thunderbird_R(2)
+                o_lights_R(0) => w_thunderbird_R(0)
                 );
 
     -- Clock process
