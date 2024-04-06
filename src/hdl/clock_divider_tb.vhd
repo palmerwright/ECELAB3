@@ -45,73 +45,63 @@
 --|
 --+----------------------------------------------------------------------------
 library ieee;
-  use ieee.std_logic_1164.all;
-  use ieee.numeric_std.all;
-  
+use ieee.std_logic_1164.all;
+
 entity clock_divider_tb is
 end clock_divider_tb;
 
-architecture test_bench of clock_divider_tb is 	
-  
+architecture test_bench of clock_divider_tb is    
     component clock_divider is
-        generic ( constant k_DIV : natural := 2	); -- How many clk cycles until slow clock toggles
-                                                   -- Effectively, you divide the clk double this 
-                                                   -- number (e.g., k_DIV := 2 --> clock divider of 4)
-        port ( 	i_clk    : in std_logic;
-                i_reset  : in std_logic;		   -- asynchronous
-                o_clk    : out std_logic		   -- divided (slow) clock
+        generic ( constant k_DIV : natural := 2 );                                                 
+        port (  i_clk    : in std_logic;
+                i_reset  : in std_logic;           
+                o_clk    : out std_logic           
         );
     end component clock_divider;
 
-	-- Setup test clk (20 ns --> 50 MHz)
-	constant k_clk_period	: time 		:= 20 ns;
-	signal clk			 	: std_logic	:= '0';
+    -- Setup test clk (20 ns --> 50 MHz)
+    constant k_clk_period    : time         := 20 ns;
+    signal clk               : std_logic    := '0';
 
-	signal reset, slow_clk	: std_logic	:= '0';
-	
-	-- Set clk divide amount here
-	constant k_clock_divs	: natural	:= 10;
-	
+    signal reset, slow_clk   : std_logic    := '0';
+    
+    -- Set clk divide amount here
+    constant k_clock_divs    : natural    := 10;
+    
 begin
-	-- PORT MAPS ----------------------------------------
+    -- PORT MAPS ----------------------------------------
+    uut_inst : clock_divider 
+    generic map ( k_DIV => k_clock_divs )
+    port map (
+        i_clk   => clk,
+        i_reset => reset,
+        o_clk   => slow_clk
+    );
 
-	-- map ports for any component instances (port mapping is like wiring hardware)
-	uut_inst : clock_divider 
-	generic map ( k_DIV => k_clock_divs )
-	port map (
-		i_clk   => clk,
-		i_reset => reset,
-		o_clk	=> slow_clk
-	);
-
-	
-	-- PROCESSES ----------------------------------------
-	
-	-- Clock Process ------------------------------------
-	clk_process : process
-	begin
-		clk <= '0';
-		wait for k_clk_period/2;
-		
-		clk <= '1';
-		wait for k_clk_period/2;
-	end process clk_process;
-	-----------------------------------------------------	
-	
-	-- Test Plan Process --------------------------------
-	test_process : process 
-	begin
-		-- clock should have good initial state, so let it divide at least twice
-		wait for k_clk_period * k_clock_divs * 2;
-		
-		-- now hold it in reset to verify that works correctly
-		reset <= '1';
-		wait for k_clk_period * k_clock_divs * 2;
-		
-		-- let the clock divide for rest of sim
-		reset <= '0';		
-		wait;
-	end process;	
-	-----------------------------------------------------	
-	
+    -- PROCESSES ----------------------------------------
+    -- Clock Process ------------------------------------
+    clk_process : process
+    begin
+            clk <= '0';
+            wait for k_clk_period/2;
+            
+            clk <= '1';
+            wait for k_clk_period/2;
+    end process clk_process;
+    -----------------------------------------------------    
+    
+    -- Test Plan Process --------------------------------
+    test_process : process 
+    begin
+        reset <= '1';
+        wait for k_clk_period * k_clock_divs * 2;
+        
+        reset <= '1';
+        wait for k_clk_period * k_clock_divs * 2;
+        
+        reset <= '0';
+        wait; 
+    end process;    
+    -----------------------------------------------------    
+    
 end test_bench;
