@@ -48,8 +48,8 @@
 --|
 --+----------------------------------------------------------------------------
 library ieee;
-use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
+    use ieee.std_logic_1164.all;
+    use ieee.numeric_std.all;
 
 entity thunderbird_fsm_tb is
 end thunderbird_fsm_tb;
@@ -64,80 +64,80 @@ architecture test_bench of thunderbird_fsm_tb is
         );
     end component;
 
-    signal tb_i_clk   : std_logic := '0';
-    signal tb_i_reset : std_logic := '0';
-    signal tb_i_left  : std_logic := '0';
-    signal tb_i_right : std_logic := '0';
-    signal tb_o_lights_L : std_logic_vector(2 downto 0);
-    signal tb_o_lights_R : std_logic_vector(2 downto 0);
-    constant clk_period : time := 10 ns;
+    signal w_reset   : std_logic := '0';
+    signal w_clk : std_logic := '0';
+    signal w_left  : std_logic := '0';
+    signal w_right : std_logic := '0';
+    
+    signal w_thunderbird_L : std_logic_vector(2 downto 0) := "000";
+    signal w_thunderbird_R : std_logic_vector(2 downto 0) := "000";
+    
+    constant k_clk_period : time := 10 ns;
     
 begin 
-    -- Unit Under Test (UUT)
+    -- Unit Under Test
     uut: thunderbird_fsm port map (
-        i_clk      => tb_i_clk,
-        i_reset    => tb_i_reset,
-        i_left     => tb_i_left,
-        i_right    => tb_i_right,
-        o_lights_L => tb_o_lights_L,
-        o_lights_R => tb_o_lights_R
-    );
+                i_clk => w_clk,
+                i_reset => w_reset,
+                i_left => w_left,
+                i_right => w_right,
+                o_lights_L(0) => w_thunderbird_L(0),
+                o_lights_L(1) => w_thunderbird_L(1),
+                o_lights_L(2) => w_thunderbird_L(2),
+                o_lights_R(2) => w_thunderbird_R(0),
+                o_lights_R(1) => w_thunderbird_R(1),
+                o_lights_R(0) => w_thunderbird_R(2)
+                );
 
     -- Clock process
     clock_process : process
     begin
-        while true loop
-            tb_i_clk <= '0';
-            wait for clk_period / 2;
-            tb_i_clk <= '1';
-            wait for clk_period / 2;
-        end loop;
+            w_clk <= '0';
+            wait for k_clk_period / 2;
+            w_clk <= '1';
+            wait for k_clk_period / 2;
     end process;
 
     -- Test Process
     test_process : process
     begin
-        -- Apply reset
-        tb_i_reset <= '1';
-        wait for 20 ns;
-        tb_i_reset <= '0';
-        wait for 40 ns; 
 
-        assert tb_o_lights_L = "000" and tb_o_lights_R = "000"
-            report "Failure: Lights not off after reset" severity failure;
-
-        -- Test sequence 1: Left turn signal
-        tb_i_left <= '1';
-        wait for 100 ns; 
-        tb_i_left <= '0';
-        wait for 50 ns;
+    w_reset <= '1';
+    wait for k_clk_period * 1;
+        assert w_thunderbird_L = "000" report "bad reset" severity failure;
+        assert w_thunderbird_R = "000" report "bad reset" severity failure;
         
-        assert (tb_o_lights_L = "100" or tb_o_lights_L = "110" or tb_o_lights_L = "111") 
-            report "Failure: Incorrect left turn state" severity failure;
-
-        -- Test sequence 2: Right turn signal
-        tb_i_right <= '1';
-        wait for 100 ns;
-        tb_i_right <= '0';
-        wait for 50 ns;
+    w_reset <= '0';
+    wait for k_clk_period * 1;
+    
+    w_left <= '1'; w_right <= '0';
+    wait for k_clk_period;
+        assert w_thunderbird_L = "001" report "should be L1" severity failure;
+    wait for k_clk_period;
+        assert w_thunderbird_L = "011" report "should be L2" severity failure;
+    wait for k_clk_period;
+        assert w_thunderbird_L = "111" report "should be L3" severity failure;
+    wait for k_clk_period;
+        assert w_thunderbird_L = "000" report "bad reset" severity failure;
         
-                 assert (tb_o_lights_R = "000") 
-                  report "Failure: Incorrect right turn state" severity failure;
-        
-
-        -- Test sequence 3: Hazard lights (both signals)
-       -- tb_i_left <= '1';
-        --tb_i_right <= '1';
-        --wait for 100 ns;
-        
-            --    assert tb_o_lights_L = "000" and tb_o_lights_R = "000"
-            --        report "Failure: Incorrect hazard lights state" severity failure;
+    w_left <= '0'; w_right <= '1';
+        wait for k_clk_period;
+            assert w_thunderbird_R = "001" report "should be R1" severity failure;
+        wait for k_clk_period;
+            assert w_thunderbird_R = "011" report "should be R2" severity failure;
+        wait for k_clk_period;
+            assert w_thunderbird_R = "111" report "should be R3" severity failure;
+        wait for k_clk_period;
+            assert w_thunderbird_R = "000" report "bad reset" severity failure;
             
-       -- tb_i_left <= '0';
-       -- tb_i_right <= '0';
-      --  wait for 50 ns;
-        
-
+    w_left <= '1'; w_right <= '1';
+         wait for k_clk_period;
+            assert w_thunderbird_R = "111" report "should be R3" severity failure;
+            assert w_thunderbird_L = "111" report "should be L3" severity failure;
+         wait for k_clk_period;
+            assert w_thunderbird_R = "000" report "bad reset" severity failure;
+            assert w_thunderbird_L = "000" report "bad reset" severity failure;
+     
         wait;
     end process;
 end test_bench;
